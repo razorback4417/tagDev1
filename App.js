@@ -4,11 +4,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import LoadingScreen from './LoadingScreen';
-import SearchScreen from './SearchScreen';
-import TagScreen from './TagScreen';
-import ProfileScreen from './ProfileScreen';
-import LoginRegisterScreen from './LoginRegisterScreen'; // Import the LoginRegisterScreen
+import LoadingScreen from './screens/LoadingScreen';
+import SearchScreen from './screens/SearchScreen';
+import TagScreen from './screens/TagScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import LoginRegisterScreen from './screens/LoginRegisterScreen'; // Import the LoginRegisterScreen
 
 import { LogBox } from 'react-native';
 
