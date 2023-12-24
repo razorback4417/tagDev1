@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
+import { auth } from '../firebaseConfig'; // import auth from firebaseConfig.js
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+
+import { doc, setDoc } from "firebase/firestore";
+import { firestore } from '../firebaseConfig'; // import firestore from firebaseConfig.js
 
 export default function LoginRegisterScreen(props) {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,18 +14,26 @@ export default function LoginRegisterScreen(props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     // Check if email and password fields are not empty
     if (!email || !password) {
       Alert.alert('Invalid input', 'Email and password fields cannot be empty');
       return;
     }
 
-    // Call onLogin prop to set isLoggedIn to true in App.js
-    props.onLogin();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // The user is now signed in.
+      // Call onLogin prop to set isLoggedIn to true in App.js
+      props.onLogin();
+    } catch (error) {
+      Alert.alert('Invalid input', error.message || 'Invalid email or password');
+      console.error(error);
+      // There was an error signing in.
+    }
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     // Check if all fields are filled out
     if (!firstName || !lastName || !phoneNumber || !email || !password) {
       Alert.alert('Missing fields', 'All fields are required for registration');
@@ -48,6 +61,25 @@ export default function LoginRegisterScreen(props) {
     }
 
     // Handle register
+    try {
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      // The user has been registered and is now signed in.
+
+      // Save additional user information in Firestore
+      await setDoc(doc(firestore, 'users', user.uid), {
+        firstName,
+        lastName,
+        phoneNumber,
+        email,
+      });
+
+      // Call onLogin prop to set isLoggedIn to true in App.js
+      props.onLogin();
+    } catch (error) {
+      console.error(error);
+      // There was an error registering the user.
+    }
+
   };
 
   return (

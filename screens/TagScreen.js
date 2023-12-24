@@ -3,6 +3,9 @@ import { Text, View, Button, StyleSheet, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import RNPickerSelect from 'react-native-picker-select';
 
+import { addDoc, collection } from "firebase/firestore";
+import { auth, firestore } from '../firebaseConfig'; // import firestore from firebaseConfig.js
+
 export default function TagScreen() {
     const [date, setDate] = useState(new Date());
     const [show, setShow] = useState(false);
@@ -10,14 +13,17 @@ export default function TagScreen() {
     const [dropoffLocation, setDropoffLocation] = useState('');
 
     const pickupLocations = [
-        { label: 'Location 1', value: 'location1' },
-        { label: 'Location 2', value: 'location2' },
+        { label: 'Carnasale Commons', value: 'commons' },
+        { label: 'Luskin Hotel', value: 'luskin' },
+        { label: 'Rieber Courts', value: 'courts' },
         // Add more locations as needed
     ];
 
     const dropoffLocations = [
-        { label: 'Location 1', value: 'location1' },
-        { label: 'Location 2', value: 'location2' },
+        { label: 'LAX Airport', value: 'lax' },
+        { label: 'Santa Monica', value: 'monica' },
+        { label: 'K Town', value: 'ktown' },
+        { label: 'Union Station', value: 'union' },
         // Add more locations as needed
     ];
 
@@ -31,38 +37,87 @@ export default function TagScreen() {
         setShow(true);
     };
 
-    const handleSubmit = () => {
-        // Post data
-        console.log('Date:', date);
-        console.log('Pickup Location:', pickupLocation);
-        console.log('Dropoff Location:', dropoffLocation);
-    };
+    // const handleSubmit = () => {
+    //     // Post data
+    //     console.log('Date:', date);
+    //     console.log('Pickup Location:', pickupLocation);
+    //     console.log('Dropoff Location:', dropoffLocation);
+    // };
 
-    return (
+    const handleSubmit = async () => {
+
+        const tagFormData = {
+          date,
+          pickupLocation,
+          dropoffLocation,
+          // Add other form fields here
+          userId: auth.currentUser.uid, // Add the user's UID to the form data
+        };
+        console.log('tagFormData: ', tagFormData);
+
+        try {
+          // Add a new document to the 'tags' collection with the tag form data
+
+          const docRef = await addDoc(collection(firestore, 'tags'), tagFormData);
+
+          // The tag form data has been saved in Firestore
+          console.log('Tag form data saved successfully. Document ID: ', docRef.id);
+        } catch (error) {
+          console.error('Error saving tag form data: ', error);
+        }
+      };
+
+      return (
         <View style={styles.container}>
-            <Button onPress={showDatepicker} title="Show date picker!" />
-            {show && (
-                <DateTimePicker
-                    testID="dateTimePicker"
-                    value={date}
-                    mode={'datetime'}
-                    display="default"
-                    onChange={onChange}
-                />
-            )}
-            <Text style={styles.label}>Pickup Location:</Text>
-            <RNPickerSelect
-                onValueChange={value => setPickupLocation(value)}
-                items={pickupLocations}
+          <Button onPress={showDatepicker} title="Show date picker!" />
+          {show && (
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={date}
+              mode={'datetime'}
+              display="default"
+              onChange={onChange}
             />
-            <Text style={styles.label}>Dropoff Location:</Text>
-            <RNPickerSelect
-                onValueChange={value => setDropoffLocation(value)}
-                items={dropoffLocations}
-            />
-            <Button title="Submit" onPress={handleSubmit} />
+          )}
+          <Text style={styles.label}>Pickup Location:</Text>
+          <RNPickerSelect
+            onValueChange={value => setPickupLocation(value)}
+            items={pickupLocations}
+          />
+          <Text style={styles.label}>Dropoff Location:</Text>
+          <RNPickerSelect
+            onValueChange={value => setDropoffLocation(value)}
+            items={dropoffLocations}
+          />
+          <Button onPress={handleSubmit} title="Submit" />
         </View>
-    );
+      );
+
+    // return (
+    //     <View style={styles.container}>
+    //         <Button onPress={showDatepicker} title="Show date picker!" />
+    //         {show && (
+    //             <DateTimePicker
+    //                 testID="dateTimePicker"
+    //                 value={date}
+    //                 mode={'datetime'}
+    //                 display="default"
+    //                 onChange={onChange}
+    //             />
+    //         )}
+    //         <Text style={styles.label}>Pickup Location:</Text>
+    //         <RNPickerSelect
+    //             onValueChange={value => setPickupLocation(value)}
+    //             items={pickupLocations}
+    //         />
+    //         <Text style={styles.label}>Dropoff Location:</Text>
+    //         <RNPickerSelect
+    //             onValueChange={value => setDropoffLocation(value)}
+    //             items={dropoffLocations}
+    //         />
+    //         <Button title="Submit" onPress={handleSubmit} />
+    //     </View>
+    // );
 }
 
 const styles = StyleSheet.create({

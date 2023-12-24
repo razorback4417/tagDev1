@@ -12,6 +12,9 @@ import LoginRegisterScreen from './screens/LoginRegisterScreen'; // Import the L
 
 import { LogBox } from 'react-native';
 
+import { auth } from './firebaseConfig'; // import auth from firebaseConfig.js
+import { onAuthStateChanged } from 'firebase/auth';
+
 LogBox.ignoreLogs(['Animated: `useNativeDriver` was not specified.']);
 
 const Tab = createBottomTabNavigator();
@@ -19,6 +22,21 @@ const Tab = createBottomTabNavigator();
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Add a new state variable for tracking login status
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // The user is signed in.
+        setIsLoggedIn(true);
+      } else {
+        // No user is signed in.
+        setIsLoggedIn(false);
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     setTimeout(() => {
