@@ -114,6 +114,7 @@ export default function LoginRegisterScreen(props) {
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        autoCapitalize='none'
       />
       <TextInput
         style={styles.input}
@@ -123,9 +124,9 @@ export default function LoginRegisterScreen(props) {
         secureTextEntry
       />
       {isLogin ? (
-        <Button title="Login" color="tomato" onPress={handleLogin} />
+        <Button title="Login" color="green" onPress={handleLogin} />
       ) : (
-        <Button title="Register" color="tomato" onPress={handleRegister} />
+        <Button title="Register" color="green" onPress={handleRegister} />
       )}
       <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
         <Text style={styles.switchText}>
@@ -148,11 +149,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
-    color: 'tomato',
+    color: 'green',
   },
   input: {
     height: 40,
-    borderColor: 'tomato',
+    borderColor: 'green',
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 8,
@@ -160,7 +161,7 @@ const styles = StyleSheet.create({
   },
   switchText: {
     marginTop: 10,
-    color: 'tomato',
+    color: 'green',
     textAlign: 'center',
   },
 });

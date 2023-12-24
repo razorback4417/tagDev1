@@ -4,15 +4,15 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/
 import { getDoc, doc } from "firebase/firestore";
 import { auth, firestore } from '../firebaseConfig'; // import auth and firestore
 
-// import { query, where, getDocs, collection } from "firebase/firestore";
+import * as ImagePicker from 'expo-image-picker';
 
-import { getAuth, getUser } from "firebase/auth";
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-
+import { getFirestore, updateDoc } from 'firebase/firestore';
 
 export default function ProfileScreen() {
   const [user, setUser] = useState(null);
-  const [image, setImage] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -43,65 +43,189 @@ export default function ProfileScreen() {
     return null;
   };
 
-  const handleUpload = async (event) => {
-    const file = event.target.files[0];
-    const storage = getStorage();
-    const storageRef = ref(storage, 'profilePictures/' + auth.currentUser.uid);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+  const handleUpload = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
 
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        // Handle the upload progress
-      },
-      (error) => {
-        // Handle unsuccessful uploads
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setImage(downloadURL);
-        });
-      }
-    );
+    console.log(result);
+
+    if (!result.canceled) {
+      const response = await fetch(result.uri);
+      const blob = await response.blob();
+
+      const storage = getStorage();
+      const storageRef = ref(storage, 'profilePictures/' + result.uri.split('/').pop());
+
+      const uploadTask = uploadBytesResumable(storageRef, blob);
+
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload is ' + progress + '% done');
+        },
+        (error) => {
+          console.error('Upload failed:', error);
+        },
+        async () => {
+          getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+            console.log('File available at', downloadURL);
+            // Update image state
+            setImageUrl(downloadURL);
+
+            // Update user document with profile picture URL
+            const userRef = doc(firestore, 'users', auth.currentUser.uid);
+            await updateDoc(userRef, {
+              profilePicture: downloadURL,
+            });
+          });
+        }
+      );
+    }
   };
+
+  // const handleUpload = async () => {
+  //   let result = await ImagePicker.launchImageLibraryAsync({
+  //     mediaTypes: ImagePicker.MediaTypeOptions.All,
+  //     allowsEditing: true,
+  //     aspect: [4, 3],
+  //     quality: 1,
+  //   });
+
+  //   console.log(result);
+
+  //   if (!result.cancelled) {
+  //     setImageUrl(result.uri);
+
+  //     const response = await fetch(result.uri);
+  //     const blob = await response.blob();
+
+  //     const storage = getStorage();
+  //     const storageRef = ref(storage, 'profilePictures/' + result.uri.split('/').pop());
+
+  //     const uploadTask = uploadBytesResumable(storageRef, blob);
+
+  //     uploadTask.on('state_changed',
+  //       (snapshot) => {
+  //         var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+  //         console.log('Upload is ' + progress + '% done');
+  //       },
+  //       (error) => {
+  //         console.error('Upload failed:', error);
+  //       },
+  //       () => {
+  //         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+  //           console.log('File available at', downloadURL);
+  //           // Update image state
+  //           setImageUrl(downloadURL);
+  //         });
+  //       }
+  //     );
+  //   }
+  // };
+
+
+  // return (
+  //   <View style={styles.container}>
+  //     {imageUrl ?
+  //         <Text style={styles.label}>Edit profile picture:</Text> :
+  //         <Text style={styles.label}>Upload a profile picture:</Text>
+  //       }
+  //       <Button title="Select Image" onPress={handleUpload} />
+  //       {imageUrl &&
+  //         <Image
+  //           source={{ uri: imageUrl }}
+  //           style={{
+  //             width: 200,
+  //             height: 200,
+  //             borderRadius: 100, // This will make the image circular
+  //             alignSelf: 'center', // This will center the image horizontally
+  //           }}
+  //         />
+  //       }
+  //     <Text style={styles.name}>{user ? `${user.firstName} ${user.lastName}` : 'Loading...'}</Text>
+  //     <Text style={styles.info}>{user ? formatPhoneNumber(user.phoneNumber) : 'Loading...'}</Text>
+  //     <Text style={styles.info}>{user ? user.email : 'Loading...'}</Text>
+  //   </View>
+  // );
 
   return (
     <View style={styles.container}>
+      <View style={styles.profileContainer}>
+        <Image
+          source={{ uri: user && user.profilePicture ? user.profilePicture : 'https://t3.ftcdn.net/jpg/00/64/67/80/360_F_64678017_zUpiZFjj04cnLri7oADnyMH0XBYyQghG.jpg' }}
+          style={styles.profileImage}
+        />
+        <Icon name="pencil" size={30} color="#000" style={styles.editIcon} onPress={handleUpload} />
+      </View>
       <Text style={styles.name}>{user ? `${user.firstName} ${user.lastName}` : 'Loading...'}</Text>
       <Text style={styles.info}>{user ? formatPhoneNumber(user.phoneNumber) : 'Loading...'}</Text>
       <Text style={styles.info}>{user ? user.email : 'Loading...'}</Text>
-      <Image source={{ uri: image }} style={styles.image} />
-      <Button title="Upload Profile Picture" onPress={handleUpload} />
     </View>
   );
+
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  name: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 10,
+  profileContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  info: {
+  label: {
     fontSize: 18,
-    color: '#666',
     marginBottom: 10,
   },
-  image: {
+  profileImage: {
     width: 200,
     height: 200,
     borderRadius: 100,
-    marginBottom: 20,
+    alignSelf: 'center',
+    marginBottom: 10,
   },
-  button: {
-    backgroundColor: '#3498db',
-    color: '#fff',
-    padding: 10,
-    borderRadius: 5,
+  name: {
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  info: {
+    fontSize: 18,
   },
 });
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     padding: 20,
+//     backgroundColor: '#f5f5f5',
+//   },
+//   name: {
+//     fontSize: 24,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginBottom: 10,
+//   },
+//   info: {
+//     fontSize: 18,
+//     color: '#666',
+//     marginBottom: 10,
+//   },
+//   image: {
+//     width: 200,
+//     height: 200,
+//     borderRadius: 100,
+//     marginBottom: 20,
+//   },
+//   button: {
+//     backgroundColor: '#3498db',
+//     color: '#fff',
+//     padding: 10,
+//     borderRadius: 5,
+//   },
+// });
