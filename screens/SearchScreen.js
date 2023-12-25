@@ -1,31 +1,48 @@
-import React, { useState } from 'react';
-import { View, TextInput, FlatList, Image, StyleSheet, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Text, View, TextInput, Button, FlatList, StyleSheet } from 'react-native';
+import { getDocs, collection, query, orderBy } from 'firebase/firestore';
+import { firestore } from '../firebaseConfig';
 
 export default function SearchScreen() {
-  const [search, setSearch] = useState('');
-  const [data, setData] = useState([
-    { id: '1', text: 'Item 1', image: 'https://via.placeholder.com/150' },
-    { id: '2', text: 'Item 2', image: 'https://via.placeholder.com/150' },
-    // Add more items here
-  ]);
+  const [tags, setTags] = useState([]);
+  const [searchText, setSearchText] = useState('');
+  const [isSorted, setIsSorted] = useState(false);
 
-  const filteredData = data.filter(item => item.text.toLowerCase().includes(search.toLowerCase()));
+  useEffect(() => {
+    const fetchTags = async () => {
+      const tagsCol = collection(firestore, 'tags');
+      const tagsSnapshot = await getDocs(isSorted ? query(tagsCol, orderBy('dropoffLocation')) : tagsCol);
+      const tagsList = tagsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setTags(tagsList);
+    };
+
+    fetchTags();
+  }, [isSorted]);
+
+  const handleSearch = (text) => {
+    setSearchText(text);
+  };
+
+  const handleSort = () => {
+    setIsSorted(!isSorted);
+  };
+
+  const filteredTags = tags.filter(tag => tag.dropoffLocation.toLowerCase().includes(searchText.toLowerCase()));
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search..."
-        value={search}
-        onChangeText={setSearch}
-      />
+      <TextInput style={styles.input} placeholder="Search" onChangeText={handleSearch} value={searchText} />
+      <View style={styles.button}>
+        <Button title="Sort by Drop-off Location" onPress={handleSort} color="#00B386" />
+      </View>
       <FlatList
-        data={filteredData}
+        data={filteredTags}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <View style={styles.item}>
-            <Image source={{ uri: item.image }} style={styles.image} />
-            <Text>{item.text}</Text>
+            <Text style={styles.title}>{item.dropoffLocation}</Text>
+            <Text style={styles.details}>{new Date(item.date.seconds * 1000).toLocaleDateString()}</Text>
+            <Text style={styles.details}>{item.pickupLocation}</Text>
           </View>
         )}
       />
@@ -37,22 +54,53 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F5F5',
   },
-  searchBar: {
+  input: {
     height: 40,
-    borderColor: 'gray',
+    borderColor: '#00B386',
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 5,
+    marginBottom: 10,
     paddingLeft: 10,
+  },
+  button: {
     marginBottom: 10,
   },
   item: {
-    flex: 1,
+    backgroundColor: '#FFF',
+    padding: 20,
     marginBottom: 10,
+    borderRadius: 5,
   },
-  image: {
-    width: '100%',
-    height: 150,
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#00B386',
+  },
+  details: {
+    fontSize: 14,
+    color: '#555',
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
   },
 });

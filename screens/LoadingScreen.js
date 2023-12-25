@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, Image, StyleSheet, Animated } from 'react-native';
 
+import { LogBox } from 'react-native';
+
+LogBox.ignoreLogs(['@firebase/auth']);
+
 export default function LoadingScreen() {
     const [fadeAnim] = useState(new Animated.Value(0));  // Initial value for opacity: 0
     const [typewriterText, setTypewriterText] = useState('');
@@ -11,6 +15,7 @@ export default function LoadingScreen() {
             {
                 toValue: 1,
                 duration: 2000,
+                useNativeDriver: false
             }
         ).start();
 
@@ -31,6 +36,7 @@ export default function LoadingScreen() {
             <Animated.Image
                 source={{uri: 'https://media.tenor.com/YcFSe6beXXMAAAAi/pacrun-pacman.gif'}}
                 style={{...styles.logo, opacity: fadeAnim}}
+
             />
             <ActivityIndicator size="large" color="#000000" />
             <Text style={styles.loadingText}>{typewriterText}</Text>

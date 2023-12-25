@@ -13,17 +13,18 @@ export default function TagScreen() {
     const [dropoffLocation, setDropoffLocation] = useState('');
 
     const pickupLocations = [
-        { label: 'Carnasale Commons', value: 'commons' },
-        { label: 'Luskin Hotel', value: 'luskin' },
-        { label: 'Rieber Courts', value: 'courts' },
+        { label: 'Carnasale Commons', value: 'Carnasale Commons' },
+        { label: 'Luskin Hotel', value: 'Luskin Hotel' },
+        { label: 'Rieber Courts', value: 'Rieber Courts' },
         // Add more locations as needed
     ];
 
     const dropoffLocations = [
-        { label: 'LAX Airport', value: 'lax' },
-        { label: 'Santa Monica', value: 'monica' },
-        { label: 'K Town', value: 'ktown' },
-        { label: 'Union Station', value: 'union' },
+        { label: 'LAX Airport', value: 'LAX Airport' },
+        { label: 'Sawtelle', value: 'Sawtelle' },
+        { label: 'K Town', value: 'K Town' },
+        { label: 'Union Station', value: 'Union Station' },
+        { label: 'Santa Monica', value: 'Santa Monica' },
         // Add more locations as needed
     ];
 
