@@ -27,6 +27,26 @@ export default function SearchScreen() {
     setIsSorted(!isSorted);
   };
 
+  const handleTagClick = async (tag) => {
+    console.log("here")
+    console.log("tag", tag.date)
+    if (tag.riderSpace > 0) {
+      console.log("here1")
+      const tagRef = doc(firestore, 'tags', tag.id);
+      await updateDoc(tagRef, { riderSpace: tag.riderSpace - 1 });
+
+      // Calculate the number of riders now
+      const ridersNow = 4 - (tag.riderSpace - 1);
+
+      // Create an alert
+      Alert.alert(
+        "Tag Information",
+        `Owner: ${tag.owner}\nRiders now: ${ridersNow}`,
+        [{ text: "OK" }]
+      );
+    }
+  };
+
   const filteredTags = tags.filter(tag => tag.dropoffLocation.toLowerCase().includes(searchText.toLowerCase()));
 
   return (
@@ -43,6 +63,8 @@ export default function SearchScreen() {
             <Text style={styles.title}>{item.dropoffLocation}</Text>
             <Text style={styles.details}>{new Date(item.date.seconds * 1000).toLocaleDateString()}</Text>
             <Text style={styles.details}>{item.pickupLocation}</Text>
+            <Text>Rider Space: {item.riderSpace}</Text>
+            <Button title="Tag" onPress={() => handleTagClick(item)} />
           </View>
         )}
       />

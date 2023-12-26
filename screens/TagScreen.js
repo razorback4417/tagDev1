@@ -51,8 +51,8 @@ export default function TagScreen() {
           date,
           pickupLocation,
           dropoffLocation,
-          // Add other form fields here
           userId: auth.currentUser.uid, // Add the user's UID to the form data
+          riderSpace: 3,
         };
         console.log('tagFormData: ', tagFormData);
 
