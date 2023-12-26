@@ -1,21 +1,57 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, TextInput, Button, FlatList, StyleSheet } from 'react-native';
-import { getDocs, collection, query, orderBy } from 'firebase/firestore';
+import { Text, View, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, Alert, Modal } from 'react-native';
+import { getDocs, collection, query, orderBy, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
+
+import { getAuth } from "firebase/auth";
+
+import RNPickerSelect from 'react-native-picker-select';
 
 export default function SearchScreen() {
   const [tags, setTags] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [isSorted, setIsSorted] = useState(false);
 
-  useEffect(() => {
-    const fetchTags = async () => {
-      const tagsCol = collection(firestore, 'tags');
-      const tagsSnapshot = await getDocs(isSorted ? query(tagsCol, orderBy('dropoffLocation')) : tagsCol);
-      const tagsList = tagsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setTags(tagsList);
-    };
+  const [modalVisible, setModalVisible] = useState(false);
+  const [taggersInfo, setTaggersInfo] = useState([]);
 
+  const [selectedLocation, setSelectedLocation] = useState(null);
+
+  const auth = getAuth();
+
+  const dropoffLocations = [
+    { label: 'LAX Airport', value: 'LAX Airport' },
+    { label: 'Sawtelle', value: 'Sawtelle' },
+    { label: 'K Town', value: 'K Town' },
+    { label: 'Union Station', value: 'Union Station' },
+    { label: 'Santa Monica', value: 'Santa Monica' },
+    // Add more locations as needed
+  ];
+
+
+  const fetchTags = async () => {
+    const tagsCol = collection(firestore, 'tags');
+    const tagsSnapshot = await getDocs(isSorted ? query(tagsCol, orderBy('dropoffLocation')) : tagsCol);
+    const tagsList = tagsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setTags(tagsList);
+  };
+
+  const fetchUser = async (userId) => {
+    try {
+      const userDoc = await getDoc(doc(firestore, 'users', userId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log('Successfully fetched user data:', userData);
+        setUser(userData);
+      } else {
+        console.log('No such document!');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  useEffect(() => {
     fetchTags();
   }, [isSorted]);
 
@@ -28,21 +64,46 @@ export default function SearchScreen() {
   };
 
   const handleTagClick = async (tag) => {
-    console.log("here")
-    console.log("tag", tag.date)
+    console.log('Tag clicked:', tag.userId)
     if (tag.riderSpace > 0) {
-      console.log("here1")
       const tagRef = doc(firestore, 'tags', tag.id);
-      await updateDoc(tagRef, { riderSpace: tag.riderSpace - 1 });
+      await updateDoc(tagRef, {
+        riderSpace: tag.riderSpace - 1,
+        taggers: arrayUnion(auth.currentUser.uid) // Add the current user to the taggers array
+      });
 
       // Calculate the number of riders now
       const ridersNow = 4 - (tag.riderSpace - 1);
 
+      // Fetch the taggers' information
+      const taggersInfo = tag.taggers
+      ? await Promise.all(tag.taggers.map(async (userId) => {
+          const userDoc = await getDoc(doc(firestore, 'users', userId));
+          return userDoc.data();
+        }))
+      : [];
+      setTaggersInfo(taggersInfo);
+
+      setModalVisible(true);
+
+      // Fetch the tag owner's information
+      const ownerDoc = await getDoc(doc(firestore, 'users', tag.userId));
+      const ownerData = ownerDoc.data();
+      console.log(ownerData)
+
       // Create an alert
       Alert.alert(
         "Tag Information",
-        `Owner: ${tag.owner}\nRiders now: ${ridersNow}`,
-        [{ text: "OK" }]
+        `Tag by: ${ownerData.firstName}\nRiders now: ${ridersNow}`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              // Fetch the tags again after the alert is dismissed
+              fetchTags();
+            },
+          },
+        ]
       );
     }
   };
@@ -51,20 +112,62 @@ export default function SearchScreen() {
 
   return (
     <View style={styles.container}>
+
+      <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+              setModalVisible(!modalVisible);
+            }}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
+                {taggersInfo.map((tagger, index) => (
+                  <Text key={index}>Name: {tagger.firstName}, Phone: {tagger.phoneNumber}</Text>
+                ))}
+                <Button title="Close" onPress={() => setModalVisible(false)} />
+              </View>
+            </View>
+        </Modal>
+
       <TextInput style={styles.input} placeholder="Search" onChangeText={handleSearch} value={searchText} />
-      <View style={styles.button}>
-        <Button title="Sort by Drop-off Location" onPress={handleSort} color="#00B386" />
-      </View>
+      <TouchableOpacity style={styles.button} onPress={handleSort}>
+        <Text style={styles.buttonText}>Sort by Drop-off Location</Text>
+      </TouchableOpacity>
+      <RNPickerSelect
+        onValueChange={(value) => {
+          if (value !== null) {
+            setSelectedLocation(value);
+          }
+        }}
+        items={dropoffLocations}
+        placeholder={{ label: "Sort by location", value: null }}
+        useNativeAndroidPickerStyle={false}
+        style={{
+          inputIOS: { ...styles.button, ...styles.buttonText },
+          inputAndroid: { ...styles.button, ...styles.buttonText },
+          placeholder: { color: 'gray' }
+        }}
+      />
       <FlatList
         data={filteredTags}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <View style={styles.item}>
-            <Text style={styles.title}>{item.dropoffLocation}</Text>
-            <Text style={styles.details}>{new Date(item.date.seconds * 1000).toLocaleDateString()}</Text>
-            <Text style={styles.details}>{item.pickupLocation}</Text>
-            <Text>Rider Space: {item.riderSpace}</Text>
-            <Button title="Tag" onPress={() => handleTagClick(item)} />
+            <View style={styles.tagInfo}>
+              <Text style={styles.title}>{item.dropoffLocation}</Text>
+              <Text style={styles.details}>
+                {new Date(item.date.seconds * 1000).toLocaleString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true })}
+              </Text>
+              <Text style={styles.details}>{item.pickupLocation}</Text>
+              <Text style={styles.details}>Rider Space: {item.riderSpace}</Text>
+            </View>
+            <View style={styles.buttonView}>
+              <TouchableOpacity style={styles.tagButton} onPress={() => handleTagClick(item)}>
+                <Text style={styles.buttonText}>Tag</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       />
@@ -87,13 +190,24 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   button: {
-    marginBottom: 10,
+    backgroundColor: '#00B386',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   item: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     backgroundColor: '#FFF',
     padding: 20,
     marginBottom: 10,
     borderRadius: 5,
+    flex: 1,
   },
   title: {
     fontSize: 18,
@@ -125,4 +239,19 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5
   },
+  tagInfo: {
+    width: 300,
+  },
+  tagButton: {
+    backgroundColor: '#00B386',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    height: 40,
+    justifyContent: 'center',
+  },
+  buttonView: {
+    marginRight: 10,
+    justifyContent: 'center',
+  }
 });
