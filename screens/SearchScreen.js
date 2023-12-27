@@ -17,6 +17,8 @@ export default function SearchScreen() {
 
   const [selectedLocation, setSelectedLocation] = useState(null);
 
+  const [displayTags, setDisplayTags] = useState(tags);
+
   const auth = getAuth();
 
   const dropoffLocations = [
@@ -132,26 +134,30 @@ export default function SearchScreen() {
         </Modal>
 
       <TextInput style={styles.input} placeholder="Search" onChangeText={handleSearch} value={searchText} />
-      <TouchableOpacity style={styles.button} onPress={handleSort}>
+      {/* <TouchableOpacity style={styles.button} onPress={handleSort}>
         <Text style={styles.buttonText}>Sort by Drop-off Location</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       <RNPickerSelect
         onValueChange={(value) => {
           if (value !== null) {
             setSelectedLocation(value);
+            const newDisplayTags = tags.filter(tag => tag.dropoffLocation === value);
+            setDisplayTags(newDisplayTags);
+          } else {
+            setDisplayTags(tags);
           }
         }}
         items={dropoffLocations}
-        placeholder={{ label: "Sort by location", value: null }}
+        placeholder={{ label: "Find by location", value: null }}
         useNativeAndroidPickerStyle={false}
         style={{
           inputIOS: { ...styles.button, ...styles.buttonText },
           inputAndroid: { ...styles.button, ...styles.buttonText },
-          placeholder: { color: 'gray' }
+          placeholder: { color: 'white' }
         }}
       />
       <FlatList
-        data={filteredTags}
+        data={displayTags}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <View style={styles.item}>

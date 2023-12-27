@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
-import { Text, View, Button, StyleSheet, Platform, TouchableOpacity } from 'react-native';
+import { Text, View, Button, StyleSheet, Platform, TouchableOpacity, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import RNPickerSelect from 'react-native-picker-select';
 
 import { addDoc, collection } from "firebase/firestore";
 import { auth, firestore } from '../firebaseConfig'; // import firestore from firebaseConfig.js
 
+import { useNavigation } from '@react-navigation/native';
+
+
 export default function TagScreen() {
     const [date, setDate] = useState(new Date());
     const [show, setShow] = useState(false);
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropoffLocation, setDropoffLocation] = useState('');
+
+    const navigation = useNavigation();
 
     const pickupLocations = [
         { label: 'Carnasale Commons', value: 'Carnasale Commons' },
@@ -39,7 +44,6 @@ export default function TagScreen() {
     };
 
     const handleSubmit = async () => {
-        console.log("asljdhflakjsdfkjahsdkfhj")
         const tagFormData = {
           date,
           pickupLocation,
@@ -60,6 +64,18 @@ export default function TagScreen() {
         } catch (error) {
           console.error('Error saving tag form data: ', error);
         }
+
+        Alert.alert(
+          "Uploaded Tag Successfully",
+          "",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.navigate('Search')
+            }
+          ],
+          { cancelable: false }
+        );
       };
 
       return (
@@ -92,58 +108,6 @@ export default function TagScreen() {
           </TouchableOpacity>
         </View>
       );
-
-      // return (
-      //   <View style={styles.container}>
-      //     <Button onPress={showDatepicker} title="Show date picker." />
-      //     {show && (
-      //       <DateTimePicker
-      //         testID="dateTimePicker"
-      //         value={date}
-      //         mode={'datetime'}
-      //         display="default"
-      //         onChange={onChange}
-      //       />
-      //     )}
-      //     <Text style={styles.label}>Pickup Location:</Text>
-      //     <RNPickerSelect
-      //       onValueChange={value => setPickupLocation(value)}
-      //       items={pickupLocations}
-      //     />
-      //     <Text style={styles.label}>Dropoff Location:</Text>
-      //     <RNPickerSelect
-      //       onValueChange={value => setDropoffLocation(value)}
-      //       items={dropoffLocations}
-      //     />
-      //     <Button onPress={handleSubmit} title="Submit" />
-      //   </View>
-      // );
-
-    // return (
-    //     <View style={styles.container}>
-    //         <Button onPress={showDatepicker} title="Show date picker!" />
-    //         {show && (
-    //             <DateTimePicker
-    //                 testID="dateTimePicker"
-    //                 value={date}
-    //                 mode={'datetime'}
-    //                 display="default"
-    //                 onChange={onChange}
-    //             />
-    //         )}
-    //         <Text style={styles.label}>Pickup Location:</Text>
-    //         <RNPickerSelect
-    //             onValueChange={value => setPickupLocation(value)}
-    //             items={pickupLocations}
-    //         />
-    //         <Text style={styles.label}>Dropoff Location:</Text>
-    //         <RNPickerSelect
-    //             onValueChange={value => setDropoffLocation(value)}
-    //             items={dropoffLocations}
-    //         />
-    //         <Button title="Submit" onPress={handleSubmit} />
-    //     </View>
-    // );
 }
 
 const styles = StyleSheet.create({

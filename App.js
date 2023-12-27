@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+
+import { createStackNavigator } from '@react-navigation/stack';
+
 import { StatusBar } from 'expo-status-bar';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -9,6 +12,8 @@ import SearchScreen from './screens/SearchScreen';
 import TagScreen from './screens/TagScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import LoginRegisterScreen from './screens/LoginRegisterScreen'; // Import the LoginRegisterScreen
+import UserTags from './screens/UserTags'; // import the UserTags screen
+
 
 import { LogBox } from 'react-native';
 
@@ -18,6 +23,16 @@ import { onAuthStateChanged } from 'firebase/auth';
 LogBox.ignoreLogs(['Animated: `useNativeDriver` was not specified.']);
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+function ProfileStackNavigator() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="UserTags" component={UserTags} options={{ headerShown: false }} />
+    </Stack.Navigator>
+  );
+}
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -76,7 +91,7 @@ export default function App() {
       >
         <Tab.Screen name="Search" component={SearchScreen} />
         <Tab.Screen name="Tag" component={TagScreen} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
+        <Tab.Screen name="Profile" component={ProfileStackNavigator} />
       </Tab.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>

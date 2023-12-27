@@ -8,11 +8,15 @@ import * as ImagePicker from 'expo-image-picker';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 
+import { useNavigation } from '@react-navigation/native';
+
 import { getFirestore, updateDoc } from 'firebase/firestore';
 
 export default function ProfileScreen() {
   const [user, setUser] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
+
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -159,11 +163,16 @@ export default function ProfileScreen() {
           source={{ uri: user && user.profilePicture ? user.profilePicture : 'https://t3.ftcdn.net/jpg/00/64/67/80/360_F_64678017_zUpiZFjj04cnLri7oADnyMH0XBYyQghG.jpg' }}
           style={styles.profileImage}
         />
-        <Icon name="pencil" size={30} color="#000" style={styles.editIcon} onPress={handleUpload} />
+        <Icon name="pencil" size={20} color="#008000" style={styles.editIcon} onPress={handleUpload} />
       </View>
       <Text style={styles.name}>{user ? `${user.firstName} ${user.lastName}` : 'Loading...'}</Text>
       <Text style={styles.info}>{user ? formatPhoneNumber(user.phoneNumber) : 'Loading...'}</Text>
       <Text style={styles.info}>{user ? user.email : 'Loading...'}</Text>
+      <Button
+        style={styles.button}
+        title="View my Tags"
+        onPress={() => navigation.navigate('UserTags')}
+      />
     </View>
   );
 
@@ -184,8 +193,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   profileImage: {
-    width: 200,
-    height: 200,
+    width: 100,
+    height: 100,
     borderRadius: 100,
     alignSelf: 'center',
     marginBottom: 10,
@@ -196,6 +205,17 @@ const styles = StyleSheet.create({
   },
   info: {
     fontSize: 18,
+  },
+  button: {
+    backgroundColor: '#00B386',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 
