@@ -19,7 +19,7 @@ export default function LoadingScreen() {
             }
         ).start();
 
-        let text = '68 gallons of gas saved...';
+        let text = '$6,800 saved...';
         let i = 0;
         let typing = setInterval(() => {
             if (i < text.length) {
@@ -34,11 +34,20 @@ export default function LoadingScreen() {
     return (
         <View style={styles.container}>
             <Animated.Image
-                source={{uri: 'https://media.tenor.com/YcFSe6beXXMAAAAi/pacrun-pacman.gif'}}
+                // source={{uri: 'https://media.tenor.com/YcFSe6beXXMAAAAi/pacrun-pacman.gif'}}
+                //
+                source={{uri: 'https://i.ibb.co/hFKfWJ8/tagLogo.png'}}
                 style={{...styles.logo, opacity: fadeAnim}}
 
             />
             <ActivityIndicator size="large" color="#000000" />
+            <Animated.Text style={{
+                fontSize: 50,
+                fontWeight: 'bold',
+                opacity: fadeAnim  // Bind opacity to animated value
+            }}>
+                TAG BETA
+            </Animated.Text>
             <Text style={styles.loadingText}>{typewriterText}</Text>
         </View>
     );
