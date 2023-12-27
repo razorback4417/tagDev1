@@ -10,6 +10,9 @@ Current timeline for deployment to Test Flight is first week of January. Current
 To install the application, you need to have Node.js, npm, and React Native installed on your machine. Then, you can clone the repository and install the dependencies:
 
 ```bash
-git clone https://github.com/yourusername/tag.git
+git clone https://github.com/razorback4417/tagDev1.git
 cd tag
 npm install
+```
+
+Then run `npx expo install` (make sure `npx` and `expo` are installed).
