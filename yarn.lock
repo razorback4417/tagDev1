@@ -4646,9 +4646,9 @@ idb@7.1.1:
   resolved "https://registry.npmjs.org/idb/-/idb-7.1.1.tgz"
   integrity sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==
 
-"idb@github:jakearchibald/idb":
+"idb@git+https://github.com/jakearchibald/idb.git":
   version "8.0.0"
-  resolved "git+ssh://git@github.com/jakearchibald/idb.git#eb2fc14bb3588d09aaa5e86a83bf3519b06e10b3"
+  resolved "git+https://github.com/jakearchibald/idb.git#eb2fc14bb3588d09aaa5e86a83bf3519b06e10b3"
 
 ieee754@^1.1.13:
   version "1.2.1"
