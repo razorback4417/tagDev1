@@ -11,7 +11,7 @@ To install the application, you need to have Node.js, npm, and React Native inst
 
 ```bash
 git clone https://github.com/razorback4417/tagDev1.git
-cd tag
+cd tagDev1
 npm install
 ```
 
